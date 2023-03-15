@@ -3,10 +3,19 @@
 
 #[openbrush::contract]
 mod flipper {
+    use ink::prelude::string::String;
     use openbrush::{contracts::ownable::*, traits::Storage};
+    #[ink(event)]
+    pub struct Flipped {
+        #[ink(topic)]
+        from: Option<AccountId>,
+
+        #[ink(topic)]
+        message: Option<String>,
+    }
 
     #[ink(storage)]
-    #[derive(Storage)]
+    #[derive(Default, Storage)]
     pub struct Flipper {
         #[storage_field]
         ownable: ownable::Data,
@@ -14,7 +23,6 @@ mod flipper {
     }
     impl Ownable for Flipper {}
     impl Flipper {
-        /// Constructor that initializes the `bool` value to the given `init_value`.
         #[ink(constructor)]
         pub fn new(init_value: bool) -> Self {
             let mut instance = Self::default();
@@ -24,17 +32,13 @@ mod flipper {
             instance
         }
 
-        #[ink(constructor)]
-        pub fn default() -> Self {
-            Self {
-                value: false,
-                ownable: ownable::Data::default(),
-            }
-        }
-
         #[ink(message)]
         pub fn flip(&mut self) -> bool {
             self.value = !self.value;
+            Self::env().emit_event(Flipped {
+                from: Some(Self::env().caller()),
+                message: Some(String::from("string")),
+            });
             self.value
         }
 
@@ -46,7 +50,6 @@ mod flipper {
 
     #[cfg(test)]
     mod tests {
-
         use super::*;
 
         #[ink::test]

@@ -4,6 +4,8 @@ import FlipperFactory from "./typedContract/constructors/flipper"
 import Flipper from "./typedContract/contracts/flipper"
 import { ApiPromise, WsProvider, Keyring } from "@polkadot/api"
 import { KeyringPair } from "@polkadot/keyring/types"
+import { Flipped } from "./typedContract/event-types/flipper"
+import { resolve } from "styled-jsx/css"
 
 use(chaiAsPromised)
 
@@ -24,6 +26,7 @@ describe("flipper test", () => {
   before(async function setup(): Promise<void> {
     api = await ApiPromise.create({ provider: wsProvider })
     deployer = keyring.addFromUri("//Alice")
+    signer = keyring.addFromUri("//Bob")
 
     flipperFactory = new FlipperFactory(api, deployer)
 
@@ -40,18 +43,21 @@ describe("flipper test", () => {
 
   it("Sets the owner",async () => {
     expect((await contract.query.owner()).value.ok).to.equal(deployer.address)
-  })
+  })  
 
   it("Sets the initial state", async () => {
     expect((await contract.query.get()).value.ok).to.equal(initialState)
   })
 
-  it("Can flip the state", async () => {
+  it("Can flip the state with emiting an event", async () => {
     const { gasRequired } = await contract.withSigner(deployer).query.flip()
-    await contract.withSigner(deployer).tx.flip({
+    await contract.withSigner(signer).tx.flip({
       gasLimit: gasRequired,
     })
 
+    await contract.events.subscribeOnFlippedEvent(async (e) => {
+      expect(signer.address).to.equal(e.from)
+    })
     expect((await contract.query.get()).value.ok).to.be.equal(!initialState)
   })
 })

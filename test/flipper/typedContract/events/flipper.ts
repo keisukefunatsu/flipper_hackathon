@@ -16,6 +16,20 @@ export default class EventsClass {
 		this.__api = api;
 	}
 
+	public subscribeOnFlippedEvent(callback : (event : EventTypes.Flipped) => void) {
+		const callbackWrapper = (args: any[], event: any) => {
+			const _event: Record < string, any > = {};
+
+			for (let i = 0; i < args.length; i++) {
+				_event[event.args[i]!.name] = args[i]!.toJSON();
+			}
+
+			callback(handleEventReturn(_event, getEventTypeDescription('Flipped', 'flipper')) as EventTypes.Flipped);
+		};
+
+		return this.__subscribeOnEvent(callbackWrapper, (eventName : string) => eventName == 'Flipped');
+	}
+
 
 	private __subscribeOnEvent(
 		callback : (args: any[], event: any) => void,
