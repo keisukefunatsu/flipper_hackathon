@@ -1,0 +1,22 @@
+{
+  "editor.defaultFormatter": "rvest.vs-code-prettier-eslint",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "rust-analyzer.linkedProjects": ["./contracts/flipper/Cargo.toml"],
+  "runTerminalCommand.commands": [
+    {
+      "command": "swanky contract compile flipper -v && swanky contract test flipper",
+      "auto": true
+    },
+    {
+      "command": "cargo +nightly test",
+      "auto": true
+    },
+    {
+      "command": "cargo +nightly build",
+      "auto": true
+    }
+  ]
+}
