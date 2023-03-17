@@ -231,3 +231,7 @@ oclif.manifest.json
 
 # tmp artifacts path
 tmpArtifacts
+
+/artifacts/flipper/*
+/test/flipper/artifacts/*
+/test/flipper/typedContract/*

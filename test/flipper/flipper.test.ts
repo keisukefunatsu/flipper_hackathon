@@ -5,7 +5,6 @@ import Flipper from "./typedContract/contracts/flipper"
 import { ApiPromise, WsProvider, Keyring } from "@polkadot/api"
 import { KeyringPair } from "@polkadot/keyring/types"
 import { Flipped } from "./typedContract/event-types/flipper"
-import { resolve } from "styled-jsx/css"
 
 use(chaiAsPromised)
 
@@ -54,10 +53,15 @@ describe("flipper test", () => {
     await contract.withSigner(signer).tx.flip({
       gasLimit: gasRequired,
     })
+    
+    const flipped = await new Promise<Flipped>((resolve) => {
+      contract.events.subscribeOnFlippedEvent(async (e) => {                         
+        resolve(e)
+      })
+    })        
+    
+    expect(signer.address).to.equal(flipped.caller)
 
-    await contract.events.subscribeOnFlippedEvent(async (e) => {
-      expect(signer.address).to.equal(e.from)
-    })
     expect((await contract.query.get()).value.ok).to.be.equal(!initialState)
   })
 })

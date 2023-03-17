@@ -3,15 +3,15 @@
 
 #[openbrush::contract]
 mod flipper {
-    use ink::{prelude::string::String, storage::Mapping};
+    use ink::storage::Mapping;
     use openbrush::{contracts::ownable::*, traits::Storage};
     #[ink(event)]
     pub struct Flipped {
         #[ink(topic)]
-        from: Option<AccountId>,
+        caller: Option<AccountId>,
 
         #[ink(topic)]
-        message: Option<String>,
+        account_id: Option<AccountId>,
     }
 
     type FlipperAccounts = Mapping<AccountId, bool>;
@@ -40,8 +40,8 @@ mod flipper {
         pub fn flip(&mut self) -> bool {
             self.value = !self.value;
             Self::env().emit_event(Flipped {
-                from: Some(Self::env().caller()),
-                message: Some(String::from("string")),
+                caller: Some(Self::env().caller()),
+                account_id: Some(self.env().account_id()),
             });
             self.value
         }
