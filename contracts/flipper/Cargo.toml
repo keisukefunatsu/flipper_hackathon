@@ -11,6 +11,7 @@ scale = { package = "parity-scale-codec", version = "3", default-features = fals
 scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
 
 openbrush = { git = "https://github.com/727-Ventures/openbrush-contracts", version = "3.0.0", default-features = false, features = ["ownable"] }
+md5 = "0.7.0"
 
 [lib]
 name = "flipper"
@@ -22,10 +23,5 @@ crate-type = [
 
 [features]
 default = ["std"]
-std = [
-    "ink/std",
-    "scale/std",
-    "scale-info/std",
-    "openbrush/std",
-]
+std = ["ink/std", "scale/std", "scale-info/std", "openbrush/std"]
 ink-as-dependency = []

@@ -30,7 +30,7 @@ describe("flipper test", () => {
     flipperFactory = new FlipperFactory(api, deployer)
 
     contract = new Flipper(
-      (await flipperFactory.new(initialState)).address,
+      (await flipperFactory.new()).address,
       deployer,
       api
     )
@@ -42,26 +42,22 @@ describe("flipper test", () => {
 
   it("Sets the owner",async () => {
     expect((await contract.query.owner()).value.ok).to.equal(deployer.address)
-  })  
-
-  it("Sets the initial state", async () => {
-    expect((await contract.query.get()).value.ok).to.equal(initialState)
-  })
+  })    
 
   it("Can flip the state with emiting an event", async () => {
-    const { gasRequired } = await contract.withSigner(deployer).query.flip()
-    await contract.withSigner(signer).tx.flip({
+    const { gasRequired } = await contract.withSigner(deployer).query.flip("")
+    await contract.withSigner(signer).tx.flip("",{
       gasLimit: gasRequired,
     })
     
     const flipped = await new Promise<Flipped>((resolve) => {
-      contract.events.subscribeOnFlippedEvent(async (e) => {                         
+      contract.events.subscribeOnFlippedEvent(async (e) => {   
+        console.log(e)                      
         resolve(e)
       })
     })        
     
     expect(signer.address).to.equal(flipped.caller)
-
-    expect((await contract.query.get()).value.ok).to.be.equal(!initialState)
+    
   })
 })

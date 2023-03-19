@@ -9,17 +9,13 @@ mod flipper {
     pub struct Flipped {
         #[ink(topic)]
         caller: Option<AccountId>,
-
-        #[ink(topic)]
-        account_id: Option<AccountId>,
     }
 
     type FlipperAccounts = Mapping<AccountId, bool>;
 
     #[ink(storage)]
     #[derive(Default, Storage)]
-    pub struct Flipper {
-        value: bool,
+    pub struct Flipper {        
         #[storage_field]
         ownable: ownable::Data,
         flipper_accounts: FlipperAccounts,
@@ -27,9 +23,8 @@ mod flipper {
     impl Ownable for Flipper {}
     impl Flipper {
         #[ink(constructor)]
-        pub fn new(init_value: bool) -> Self {
-            let mut instance = Self::default();
-            instance.value = init_value;
+        pub fn new() -> Self {
+            let mut instance = Self::default();            
             instance._init_with_owner(Self::env().caller());
             instance.flipper_accounts = Mapping::default();
             // ink::env::debug_println!("created new instance at {}", Self::env().block_number());
@@ -37,28 +32,26 @@ mod flipper {
         }
 
         #[ink(message)]
-        pub fn flip(&mut self) -> bool {
-            self.value = !self.value;
+        pub fn flip(&mut self) {     
+            let caller = Self::env().caller();       
             Self::env().emit_event(Flipped {
-                caller: Some(Self::env().caller()),
-                account_id: Some(self.env().account_id()),
-            });
-            self.value
-        }
-
+                caller: Some(caller),                
+            });            
+            self.flipped();            
+        }        
         #[ink(message)]
-        pub fn get(&self) -> bool {
-            self.value
-        }
-        #[ink(message)]
-        pub fn is_flippers(&self) -> bool {
-            let caller = Self::env().caller();
+        pub fn is_flippers(&self, caller: AccountId) -> bool {            
             self.flipper_accounts.get(caller).unwrap_or(false)
         }
         #[ink(message)]
-        pub fn set_flippers(&mut self) {
+        pub fn flipped(&mut self) {
             let caller = Self::env().caller();
-            self.flipper_accounts.insert(caller, &true);
+            if self.is_flippers(caller) {
+                self.flipper_accounts.remove(caller);
+            }
+            else {
+                self.flipper_accounts.insert(caller, &true);
+            }            
         }
     }
 
@@ -70,25 +63,13 @@ mod flipper {
         fn get_flipped() {
             let accounts = default_accounts();
             let alice: AccountId = accounts.alice.into();
+            let bob: AccountId = accounts.bob.into();
             set_sender(alice);
-            let mut flipper = Flipper::new(false);
-            flipper.flip();
-            flipper.set_flippers();
-            assert_eq!(flipper.is_flippers(), true);
-        }
-        #[ink::test]
-        fn default_works() {
-            let flipper = Flipper::default();
-            assert_eq!(flipper.get(), false);
-        }
-
-        #[ink::test]
-        fn it_works() {
-            let mut flipper = Flipper::new(false);
-            assert_eq!(flipper.get(), false);
-            flipper.flip();
-            assert_eq!(flipper.get(), true);
-        }
+            let mut flipper = Flipper::new();
+            flipper.flip(); 
+            assert_eq!(flipper.is_flippers(alice), true);
+            assert_eq!(flipper.is_flippers(bob), false);
+        }        
 
         // https://github.com/achimcc/contract_get_account_id/blob/470874363e297d45767d9cb3c76200682d459c9c/lib.rs#L175
         fn default_accounts() -> ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> {
