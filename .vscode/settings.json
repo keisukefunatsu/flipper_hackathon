@@ -4,7 +4,7 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": true
   },
-  "rust-analyzer.linkedProjects": ["./contracts/flipper/Cargo.toml"],
+  "rust-analyzer.linkedProjects": ["contracts/flipper/Cargo.toml"],
   "runTerminalCommand.commands": [
     {
       "command": "swanky contract compile flipper -v && swanky contract test flipper",
@@ -18,5 +18,8 @@
       "command": "cargo +nightly build",
       "auto": true
     }
-  ]
+  ],
+  "[rust]": {
+    "editor.defaultFormatter": "rust-lang.rust-analyzer"
+  }
 }

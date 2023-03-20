@@ -30,7 +30,7 @@ describe("flipper test", () => {
     flipperFactory = new FlipperFactory(api, deployer)
 
     contract = new Flipper(
-      (await flipperFactory.new()).address,
+      (await flipperFactory.new("first_pass")).address,
       deployer,
       api
     )
@@ -40,24 +40,36 @@ describe("flipper test", () => {
     await api.disconnect()
   })
 
-  it("Sets the owner",async () => {
-    expect((await contract.query.owner()).value.ok).to.equal(deployer.address)
-  })    
+  it("Can flip the state with emiting an event and next signer can flip", async () => {
+    const first_pass = "first_pass"
+    const second_pass = "second_pass"
+    const third_pass = "third_pass"
 
-  it("Can flip the state with emiting an event", async () => {
-    const { gasRequired } = await contract.withSigner(deployer).query.flip("")
-    await contract.withSigner(signer).tx.flip("",{
+    const { gasRequired } = await contract.withSigner(deployer).query.flip(first_pass, second_pass)
+    await contract.withSigner(deployer).tx.flip(first_pass, second_pass ,{
       gasLimit: gasRequired,
     })
     
-    const flipped = await new Promise<Flipped>((resolve) => {
-      contract.events.subscribeOnFlippedEvent(async (e) => {   
-        console.log(e)                      
+    let flipped = await new Promise<Flipped>((resolve) => {
+      contract.events.subscribeOnFlippedEvent(async (e) => {                              
         resolve(e)
       })
-    })        
-    
-    expect(signer.address).to.equal(flipped.caller)
-    
+    }) 
+
+    expect(flipped.caller).to.equal(deployer.address)
+    expect(flipped.nextPass).to.equal(second_pass)
+        
+    await contract.withSigner(signer).tx.flip(second_pass, third_pass,{
+      gasLimit: gasRequired,
+    })
+
+    flipped = await new Promise<Flipped>((resolve) => {
+      contract.events.subscribeOnFlippedEvent(async (e) => {                              
+        resolve(e)
+      })
+    }) 
+
+    expect(flipped.caller).to.equal(signer.address)
+    expect(flipped.nextPass).to.equal(third_pass)
   })
 })
